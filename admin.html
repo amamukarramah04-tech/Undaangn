@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — Undangan</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Poppins',sans-serif;background:#f4f5f7;color:#222;font-size:14px}
+.wrap{max-width:880px;margin:0 auto;padding:24px 16px 80px}
+h1{font-size:1.3rem;margin-bottom:4px}
+h2{font-size:1.05rem;margin:28px 0 12px;padding-top:18px;border-top:1px solid #e5e5e5}
+h2:first-of-type{border-top:none;padding-top:0}
+.sub{color:#888;font-size:.8rem;margin-bottom:20px}
+.card{background:#fff;border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,.06);padding:20px;margin-bottom:16px}
+label{display:block;font-size:.8rem;color:#555;margin-bottom:6px;margin-top:14px;font-weight:500}
+input,select,textarea{
+  width:100%;padding:10px 12px;border:1.5px solid #e5e5e5;border-radius:8px;
+  font-family:inherit;font-size:.85rem;background:#fafafa;outline:none;
+}
+input:focus,select:focus,textarea:focus{border-color:#2196F3;background:#fff}
+textarea{resize:vertical;min-height:70px}
+button{cursor:pointer;font-family:inherit;border:none}
+.btn{padding:10px 18px;border-radius:8px;font-size:.82rem;font-weight:600;background:#222;color:#fff}
+.btn:hover{opacity:.9}
+.btn-blue{background:#2196F3}
+.btn-green{background:#4CAF50}
+.btn-red{background:#e53935}
+.btn-ghost{background:#fff;border:1.5px solid #ddd;color:#555}
+.btn-sm{padding:6px 12px;font-size:.74rem;border-radius:6px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1}
+.item-row{background:#f9f9f9;border-radius:10px;padding:12px;margin-bottom:10px;position:relative}
+.item-row .del{position:absolute;top:8px;right:8px}
+.thumb{width:64px;height:64px;border-radius:8px;object-fit:cover;background:#eee}
+.thumb-row{display:flex;align-items:center;gap:12px;margin-top:8px}
+.gallery-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+.gallery-item{position:relative;width:80px;height:80px}
+.gallery-item img{width:100%;height:100%;object-fit:cover;border-radius:8px}
+.gallery-item button{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#e53935;color:#fff;font-size:.65rem;line-height:1}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:8px;font-size:.8rem;z-index:999;opacity:0;transition:opacity .3s}
+.toast.show{opacity:1}
+#login-screen{max-width:360px;margin:80px auto;padding:0 16px}
+.hide{display:none !important}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.link-box{background:#eef6ff;border-radius:8px;padding:10px 12px;font-size:.78rem;color:#1565c0;word-break:break-all;margin-top:8px}
+.comment-admin{border-bottom:1px solid #eee;padding:10px 0}
+.comment-admin .meta{font-size:.72rem;color:#999}
+.comment-admin .txt{font-size:.84rem;margin:4px 0}
+.select-list{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.select-list button{padding:8px 14px;border-radius:8px;border:1.5px solid #ddd;background:#fff;font-size:.8rem}
+.select-list button.active{background:#222;color:#fff;border-color:#222}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.help{font-size:.72rem;color:#999;margin-top:4px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="card">
+    <h1>Admin Undangan</h1>
+    <p class="sub">Masuk untuk mengelola undangan kamu</p>
+    <label>Email</label>
+    <input type="email" id="login-email" placeholder="email@kamu.com">
+    <label>Password</label>
+    <input type="password" id="login-pass" placeholder="••••••••">
+    <button class="btn btn-blue" style="width:100%;margin-top:16px" onclick="doLogin()">Masuk</button>
+    <button class="btn-ghost btn" style="width:100%;margin-top:8px" onclick="doRegister()">Daftar Akun Baru</button>
+    <p id="login-error" style="color:#e53935;font-size:.78rem;margin-top:10px"></p>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="wrap hide" id="dashboard">
+  <div class="topbar">
+    <div>
+      <h1>Dashboard Undangan</h1>
+      <p class="sub" id="user-email"></p>
+    </div>
+    <button class="btn btn-ghost" onclick="doLogout()">Keluar</button>
+  </div>
+
+  <div class="card">
+    <strong>Undangan Saya</strong>
+    <div class="select-list" id="invitation-list"></div>
+    <div class="row">
+      <input id="new-slug" placeholder="slug-baru-contoh-wahyu-riski">
+      <button class="btn btn-green" onclick="createInvitation()" style="flex:0 0 auto">+ Buat Baru</button>
+    </div>
+    <p class="help">Slug jadi alamat link: undangan.html?slug=<b>slug-kamu</b> — pakai huruf kecil & tanda hubung, tanpa spasi.</p>
+  </div>
+
+  <div id="editor" class="hide">
+    <div class="card">
+      <strong>Link Undangan</strong>
+      <div class="link-box" id="invite-link"></div>
+    </div>
+
+    <h2>Mempelai</h2>
+    <div class="card">
+      <div class="row">
+        <div>
+          <label>Nama Panggilan Pria</label><input id="f-groomName">
+          <label>Nama Lengkap Pria</label><input id="f-groomFullName">
+          <label>Anak ke- (Pria)</label><input id="f-groomRank" placeholder="Putra ke-1">
+          <label>Orang Tua Pria</label><textarea id="f-groomParents" placeholder="Bapak ...&#10;dan&#10;Ibu ..."></textarea>
+          <label>Foto Pria</label>
+          <div class="thumb-row"><img class="thumb" id="prev-groomPhoto"><input type="file" accept="image/*" onchange="uploadImage(this,'groomPhoto')"></div>
+        </div>
+        <div>
+          <label>Nama Panggilan Wanita</label><input id="f-brideName">
+          <label>Nama Lengkap Wanita</label><input id="f-brideFullName">
+          <label>Anak ke- (Wanita)</label><input id="f-brideRank" placeholder="Putri ke-2">
+          <label>Orang Tua Wanita</label><textarea id="f-brideParents"></textarea>
+          <label>Foto Wanita</label>
+          <div class="thumb-row"><img class="thumb" id="prev-bridePhoto"><input type="file" accept="image/*" onchange="uploadImage(this,'bridePhoto')"></div>
+        </div>
+      </div>
+      <label>Foto Hero (halaman depan)</label>
+      <div class="thumb-row"><img class="thumb" id="prev-heroPhoto"><input type="file" accept="image/*" onchange="uploadImage(this,'heroPhoto')"></div>
+      <label>Kalimat Pembuka</label>
+      <textarea id="f-openingText"></textarea>
+    </div>
+
+    <h2>Ayat / Doa Pembuka</h2>
+    <div class="card">
+      <div id="ayat-list"></div>
+      <button class="btn btn-ghost btn-sm" onclick="addAyat()">+ Tambah Ayat</button>
+    </div>
+
+    <h2>Kisah Cinta</h2>
+    <div class="card">
+      <div id="kisah-list"></div>
+      <button class="btn btn-ghost btn-sm" onclick="addKisah()">+ Tambah Bagian Cerita</button>
+    </div>
+
+    <h2>Tanggal & Acara</h2>
+    <div class="card">
+      <label>Tanggal & Jam Akad (untuk countdown)</label>
+      <input type="datetime-local" id="f-weddingDateISO">
+      <label>Keterangan Jam Akad (teks tampilan)</label>
+      <input id="f-akadTime" placeholder="Pukul 10.00 WIB - Selesai">
+      <label>Keterangan Jam Resepsi</label>
+      <input id="f-resepsiTime" placeholder="Pukul 13.00 WIB - Selesai">
+      <label>Dress Code</label>
+      <input id="f-dressCode" placeholder="Busana batik dan bersepatu.">
+      <label>Alamat</label>
+      <textarea id="f-address"></textarea>
+      <label>Link Google Maps</label>
+      <input id="f-mapsUrl" placeholder="https://maps.google.com/...">
+    </div>
+
+    <h2>Galeri</h2>
+    <div class="card">
+      <label>Galeri Utama (slider)</label>
+      <input type="file" accept="image/*" multiple onchange="uploadGallery(this,'gallery')">
+      <div class="gallery-grid" id="grid-gallery"></div>
+      <label style="margin-top:20px">Momen Bergerak (auto-scroll)</label>
+      <input type="file" accept="image/*" multiple onchange="uploadGallery(this,'galleryAuto')">
+      <div class="gallery-grid" id="grid-galleryAuto"></div>
+    </div>
+
+    <h2>Musik</h2>
+    <div class="card">
+      <label>Link Musik (mp3)</label>
+      <input id="f-musicUrl" placeholder="https://contoh.com/lagu.mp3">
+      <p class="help">
+        Karena penyimpanan foto/musik langsung (Storage) di Firebase perlu upgrade berbayar, khusus musik pakai cara ini:
+        upload file mp3 ke <b>Google Drive</b> → klik kanan file → <b>Share/Bagikan</b> → ubah jadi
+        "Anyone with the link" → salin link → tempel di sini. Atau pakai link mp3 dari sumber lain yang bisa diakses publik.
+      </p>
+    </div>
+
+    <h2>Love Gift / Hadiah</h2>
+    <div class="card">
+      <div id="gift-list"></div>
+      <button class="btn btn-ghost btn-sm" onclick="addGift()">+ Tambah Rekening / Gift</button>
+    </div>
+
+    <h2>Penutup</h2>
+    <div class="card">
+      <label>Teks Penutup</label>
+      <textarea id="f-closingText"></textarea>
+      <label>Footer (kredit kecil di bawah)</label>
+      <input id="f-footerText" placeholder="Build with ❤️ Namamu">
+      <label>Nama Brand (muncul di loading screen)</label>
+      <input id="f-brandLabel" placeholder="⚙ Namamu">
+    </div>
+
+    <button class="btn btn-blue" style="width:100%;padding:14px;font-size:.95rem" onclick="saveAll()">
+      <span id="save-label">Simpan Semua Perubahan</span>
+    </button>
+
+    <h2>Ucapan & Doa dari Tamu</h2>
+    <div class="card">
+      <div id="comments-admin-list"></div>
+      <p class="sub" id="comments-empty">Belum ada ucapan.</p>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword,
+  createUserWithEmailAndPassword, signOut
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc,
+  collection, query, where, getDocs, orderBy
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// ====== GANTI BAGIAN INI DENGAN CONFIG FIREBASE PROYEK KAMU (SAMA SEPERTI di undangan.html) ======
+const firebaseConfig = {
+  apiKey: "AIzaSyDDKpIQFm7RUtgIQxmItWG-NFyj_tCqmz4",
+  authDomain: "undaganku02.firebaseapp.com",
+  databaseURL: "https://undaganku02-default-rtdb.firebaseio.com",
+  projectId: "undaganku02",
+  storageBucket: "undaganku02.firebasestorage.app",
+  messagingSenderId: "198913370893",
+  appId: "1:198913370893:web:cba169f8929a67ecbc5e44"
+};
+// ===================================================================================================
+
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+
+let currentUser = null;
+let currentSlug = null;
+let currentData = {};
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+/* ===== AUTH ===== */
+window.doLogin = async function(){
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  document.getElementById('login-error').textContent = '';
+  try{
+    await signInWithEmailAndPassword(auth, email, pass);
+  }catch(err){
+    document.getElementById('login-error').textContent = 'Login gagal: ' + err.message;
+  }
+};
+window.doRegister = async function(){
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  document.getElementById('login-error').textContent = '';
+  try{
+    await createUserWithEmailAndPassword(auth, email, pass);
+  }catch(err){
+    document.getElementById('login-error').textContent = 'Daftar gagal: ' + err.message;
+  }
+};
+window.doLogout = function(){ signOut(auth); };
+
+onAuthStateChanged(auth, async user => {
+  if(user){
+    currentUser = user;
+    document.getElementById('login-screen').classList.add('hide');
+    document.getElementById('dashboard').classList.remove('hide');
+    document.getElementById('user-email').textContent = user.email;
+    await loadMyInvitations();
+  }else{
+    currentUser = null;
+    document.getElementById('login-screen').classList.remove('hide');
+    document.getElementById('dashboard').classList.add('hide');
+  }
+});
+
+/* ===== LIST / CREATE INVITATIONS ===== */
+async function loadMyInvitations(){
+  const q = query(collection(db,'invitations'), where('ownerUid','==', currentUser.uid));
+  const snap = await getDocs(q);
+  const listEl = document.getElementById('invitation-list');
+  listEl.innerHTML = '';
+  snap.forEach(d => {
+    const btn = document.createElement('button');
+    btn.textContent = d.id;
+    btn.onclick = () => selectInvitation(d.id);
+    listEl.appendChild(btn);
+  });
+  if(snap.empty){
+    listEl.innerHTML = '<span class="sub">Belum ada undangan. Buat baru di bawah.</span>';
+  }
+}
+
+window.createInvitation = async function(){
+  let slug = document.getElementById('new-slug').value.trim().toLowerCase();
+  slug = slug.replace(/[^a-z0-9-]/g,'-').replace(/-+/g,'-');
+  if(!slug){ toast('Isi slug dulu'); return; }
+  const ref = doc(db,'invitations',slug);
+  const existing = await getDoc(ref);
+  if(existing.exists()){ toast('Slug sudah dipakai, pilih nama lain'); return; }
+  await setDoc(ref, {
+    ownerUid: currentUser.uid,
+    groomName:'', brideName:'', groomFullName:'', brideFullName:'',
+    groomRank:'', brideRank:'', groomParents:'', brideParents:'',
+    heroPhoto:'', groomPhoto:'', bridePhoto:'',
+    openingText:'Dengan segala kerendahan hati, kami memohon kehadiran Anda untuk berkenan menghadiri acara pernikahan kami:',
+    ayatList:[], kisahCinta:[], weddingDateISO:'', akadTime:'', resepsiTime:'',
+    dressCode:'', address:'', mapsUrl:'', gallery:[], galleryAuto:[],
+    musicUrl:'', giftAccounts:[], closingText:'Terima kasih atas perhatian dan doa restu Anda.',
+    footerText:'Build with ❤️', brandLabel:''
+  });
+  document.getElementById('new-slug').value = '';
+  await loadMyInvitations();
+  selectInvitation(slug);
+  toast('Undangan baru dibuat!');
+};
+
+async function selectInvitation(slug){
+  currentSlug = slug;
+  document.querySelectorAll('#invitation-list button').forEach(b => b.classList.toggle('active', b.textContent===slug));
+  const snap = await getDoc(doc(db,'invitations',slug));
+  currentData = snap.data() || {};
+  document.getElementById('editor').classList.remove('hide');
+  const link = `${location.origin}${location.pathname.replace('admin.html','undangan.html')}?slug=${slug}`;
+  document.getElementById('invite-link').textContent = link;
+  fillForm();
+  loadComments();
+}
+
+/* ===== FILL FORM ===== */
+function fillForm(){
+  const d = currentData;
+  const set = (id,val) => { const el=document.getElementById(id); if(el) el.value = val ?? ''; };
+  set('f-groomName', d.groomName); set('f-groomFullName', d.groomFullName);
+  set('f-groomRank', d.groomRank); set('f-groomParents', d.groomParents);
+  set('f-brideName', d.brideName); set('f-brideFullName', d.brideFullName);
+  set('f-brideRank', d.brideRank); set('f-brideParents', d.brideParents);
+  set('f-openingText', d.openingText);
+  set('f-akadTime', d.akadTime); set('f-resepsiTime', d.resepsiTime);
+  set('f-dressCode', d.dressCode); set('f-address', d.address); set('f-mapsUrl', d.mapsUrl);
+  set('f-closingText', d.closingText); set('f-footerText', d.footerText); set('f-brandLabel', d.brandLabel);
+  set('f-musicUrl', d.musicUrl);
+  if(d.weddingDateISO){
+    const dt = new Date(d.weddingDateISO);
+    const pad = n => String(n).padStart(2,'0');
+    document.getElementById('f-weddingDateISO').value = `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+  } else {
+    document.getElementById('f-weddingDateISO').value = '';
+  }
+
+  setThumb('heroPhoto', d.heroPhoto); setThumb('groomPhoto', d.groomPhoto); setThumb('bridePhoto', d.bridePhoto);
+
+  renderAyatList(d.ayatList||[]);
+  renderKisahList(d.kisahCinta||[]);
+  renderGiftList(d.giftAccounts||[]);
+  renderGalleryGrid('gallery', d.gallery||[]);
+  renderGalleryGrid('galleryAuto', d.galleryAuto||[]);
+}
+
+function setThumb(field, url){
+  const img = document.getElementById('prev-'+field);
+  if(img) img.src = url || '';
+}
+
+/* ===== AYAT LIST ===== */
+function renderAyatList(list){
+  const box = document.getElementById('ayat-list');
+  box.innerHTML = '';
+  list.forEach((a,i) => {
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.innerHTML = `
+      <button class="btn-sm btn-red del" onclick="removeAyat(${i})">Hapus</button>
+      <label>Judul (opsional)</label><input value="${escAttr(a.title)}" oninput="updateAyat(${i},'title',this.value)">
+      <label>Teks Ayat</label><textarea oninput="updateAyat(${i},'text',this.value)">${esc(a.text)}</textarea>
+      <label>Sumber</label><input value="${escAttr(a.source)}" oninput="updateAyat(${i},'source',this.value)" placeholder="QS. ...">
+    `;
+    box.appendChild(row);
+  });
+}
+window.addAyat = function(){ currentData.ayatList = currentData.ayatList||[]; currentData.ayatList.push({title:'',text:'',source:''}); renderAyatList(currentData.ayatList); };
+window.removeAyat = function(i){ currentData.ayatList.splice(i,1); renderAyatList(currentData.ayatList); };
+window.updateAyat = function(i,field,val){ currentData.ayatList[i][field]=val; };
+
+/* ===== KISAH LIST ===== */
+function renderKisahList(list){
+  const box = document.getElementById('kisah-list');
+  box.innerHTML = '';
+  list.forEach((k,i) => {
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.innerHTML = `
+      <button class="btn-sm btn-red del" onclick="removeKisah(${i})">Hapus</button>
+      <label>Icon/Emoji</label><input value="${escAttr(k.icon)}" oninput="updateKisah(${i},'icon',this.value)" placeholder="💕">
+      <label>Judul</label><input value="${escAttr(k.title)}" oninput="updateKisah(${i},'title',this.value)" placeholder="2020 · Awal Bertemu">
+      <label>Cerita</label><textarea oninput="updateKisah(${i},'text',this.value)">${esc(k.text)}</textarea>
+    `;
+    box.appendChild(row);
+  });
+}
+window.addKisah = function(){ currentData.kisahCinta = currentData.kisahCinta||[]; currentData.kisahCinta.push({icon:'💕',title:'',text:''}); renderKisahList(currentData.kisahCinta); };
+window.removeKisah = function(i){ currentData.kisahCinta.splice(i,1); renderKisahList(currentData.kisahCinta); };
+window.updateKisah = function(i,field,val){ currentData.kisahCinta[i][field]=val; };
+
+/* ===== GIFT LIST ===== */
+function renderGiftList(list){
+  const box = document.getElementById('gift-list');
+  box.innerHTML = '';
+  list.forEach((g,i) => {
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.innerHTML = `
+      <button class="btn-sm btn-red del" onclick="removeGift(${i})">Hapus</button>
+      <div class="row">
+        <div><label>Tipe</label><input value="${escAttr(g.type)}" oninput="updateGift(${i},'type',this.value)" placeholder="Transfer / Qris / Gift"></div>
+        <div><label>Icon class (FontAwesome)</label><input value="${escAttr(g.iconClass)}" oninput="updateGift(${i},'iconClass',this.value)" placeholder="fa-right-left"></div>
+      </div>
+      <label>Nama Pemilik</label><input value="${escAttr(g.name)}" oninput="updateGift(${i},'name',this.value)">
+      <div class="row">
+        <div><label>No. Rekening / QR Ref / Alamat</label><input value="${escAttr(g.number)}" oninput="updateGift(${i},'number',this.value)"></div>
+        <div><label>Bank / Keterangan</label><input value="${escAttr(g.bank)}" oninput="updateGift(${i},'bank',this.value)" placeholder="Bank BCA"></div>
+      </div>
+    `;
+    box.appendChild(row);
+  });
+}
+window.addGift = function(){ currentData.giftAccounts = currentData.giftAccounts||[]; currentData.giftAccounts.push({type:'Transfer',iconClass:'fa-right-left',name:'',number:'',bank:''}); renderGiftList(currentData.giftAccounts); };
+window.removeGift = function(i){ currentData.giftAccounts.splice(i,1); renderGiftList(currentData.giftAccounts); };
+window.updateGift = function(i,field,val){ currentData.giftAccounts[i][field]=val; };
+
+/* ===== KOMPRES FOTO (disimpan langsung di Firestore, tanpa Storage) ===== */
+function compressImage(file, maxWidth, quality){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if(w > maxWidth){ h = Math.round(h * maxWidth / w); w = maxWidth; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => reject(new Error('Gagal membaca gambar'));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error('Gagal membaca file'));
+    reader.readAsDataURL(file);
+  });
+}
+
+window.uploadImage = async function(input, field){
+  const file = input.files[0];
+  if(!file || !currentSlug) return;
+  toast('Memproses foto...');
+  try{
+    const dataUrl = await compressImage(file, 700, 0.72);
+    currentData[field] = dataUrl;
+    setThumb(field, dataUrl);
+    toast('Foto siap. Jangan lupa klik Simpan.');
+  }catch(err){ console.error(err); toast('Gagal memproses foto'); }
+  input.value = '';
+};
+
+/* ===== UPLOAD: gallery (multi, dikompres kecil biar hemat) ===== */
+window.uploadGallery = async function(input, field){
+  const files = Array.from(input.files);
+  if(!files.length || !currentSlug) return;
+  toast('Memproses ' + files.length + ' foto...');
+  currentData[field] = currentData[field] || [];
+  for(const file of files){
+    try{
+      const dataUrl = await compressImage(file, 550, 0.6);
+      currentData[field].push(dataUrl);
+    }catch(err){ console.error(err); }
+  }
+  renderGalleryGrid(field, currentData[field]);
+  const totalKb = Math.round(JSON.stringify(currentData).length / 1024);
+  if(totalKb > 700){
+    toast('Peringatan: data sudah ' + totalKb + 'KB, kurangi jumlah foto agar tidak gagal simpan.');
+  } else {
+    toast('Selesai. Jangan lupa klik Simpan.');
+  }
+  input.value = '';
+};
+
+function renderGalleryGrid(field, list){
+  const grid = document.getElementById('grid-'+field);
+  grid.innerHTML = '';
+  list.forEach((url,i) => {
+    const item = document.createElement('div');
+    item.className = 'gallery-item';
+    item.innerHTML = `<img src="${url}"><button onclick="removeGalleryItem('${field}',${i})">✕</button>`;
+    grid.appendChild(item);
+  });
+}
+window.removeGalleryItem = function(field, i){
+  currentData[field].splice(i,1);
+  renderGalleryGrid(field, currentData[field]);
+};
+
+/* ===== SAVE ===== */
+window.saveAll = async function(){
+  if(!currentSlug) return;
+  const get = id => document.getElementById(id).value;
+  const dtVal = document.getElementById('f-weddingDateISO').value;
+
+  Object.assign(currentData, {
+    groomName: get('f-groomName'), groomFullName: get('f-groomFullName'),
+    groomRank: get('f-groomRank'), groomParents: get('f-groomParents'),
+    brideName: get('f-brideName'), brideFullName: get('f-brideFullName'),
+    brideRank: get('f-brideRank'), brideParents: get('f-brideParents'),
+    openingText: get('f-openingText'),
+    weddingDateISO: dtVal ? new Date(dtVal).toISOString() : '',
+    akadTime: get('f-akadTime'), resepsiTime: get('f-resepsiTime'),
+    dressCode: get('f-dressCode'), address: get('f-address'), mapsUrl: get('f-mapsUrl'),
+    musicUrl: get('f-musicUrl'),
+    closingText: get('f-closingText'), footerText: get('f-footerText'), brandLabel: get('f-brandLabel')
+  });
+
+  try{
+    await setDoc(doc(db,'invitations',currentSlug), currentData, { merge:true });
+    toast('Tersimpan!');
+  }catch(err){ console.error(err); toast('Gagal menyimpan: ' + err.message); }
+};
+
+/* ===== COMMENTS ADMIN ===== */
+async function loadComments(){
+  const q = query(collection(db,'invitations',currentSlug,'comments'), orderBy('createdAt','desc'));
+  const snap = await getDocs(q);
+  const box = document.getElementById('comments-admin-list');
+  box.innerHTML = '';
+  document.getElementById('comments-empty').style.display = snap.empty ? 'block' : 'none';
+  snap.forEach(d => {
+    const c = d.data();
+    const row = document.createElement('div');
+    row.className = 'comment-admin';
+    row.innerHTML = `
+      <div class="meta">${esc(c.name)} · ${esc(c.presence||'-')} · ${c.likes||0} suka</div>
+      <div class="txt">${esc(c.text)}</div>
+      <button class="btn-sm btn-red" onclick="deleteComment('${d.id}')">Hapus Ucapan Ini</button>
+    `;
+    box.appendChild(row);
+  });
+}
+window.deleteComment = async function(id){
+  if(!confirm('Hapus ucapan ini?')) return;
+  await deleteDoc(doc(db,'invitations',currentSlug,'comments',id));
+  toast('Ucapan dihapus');
+  loadComments();
+};
+
+/* ===== utils ===== */
+function esc(s){ return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escAttr(s){ return esc(s).replace(/"/g,'&quot;'); }
+</script>
+</body>
+</html>
